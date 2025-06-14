@@ -42,6 +42,8 @@ export const UserSchema = new Schema<IUserDoc>(
     email: { type: String, required: true, unique: true },
     password: { type: String, required: true },
     profileImg: String,
+    passwordResetToken: String,
+    passwordResetTokenExp: String,
     refreshToken: { type: [String], default: [] },
   },
   { timestamps: true }

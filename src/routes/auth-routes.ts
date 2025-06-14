@@ -50,15 +50,15 @@ app.post(
 
     logger.info(`User ${user.fullname} has been registered`);
 
-    await mailScheduler.scheduleEmailVerification({
-      email: user.email,
-      userId: user._id.toString(),
-      username: user.fullname,
-    });
+    // TODO: construct a verification link here
+
+    const verificationLink = "link here";
+
+    await mailScheduler.scheduleEmailVerification(user, verificationLink);
 
     const response = responseFormater(
       "Signup successful",
-      userService.publicProps(updatedUser),
+      userService.publicProfile(updatedUser),
       { accessToken }
     );
 
@@ -97,7 +97,7 @@ app.post("/login", zValidator("json", UserLoginZodSchema), async (c) => {
 
   const response = responseFormater(
     "Login successful",
-    userService.publicProps(updatedUser),
+    userService.publicProfile(updatedUser),
     { accessToken }
   );
 

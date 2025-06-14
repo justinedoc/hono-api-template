@@ -45,7 +45,7 @@ app.get("/:id", zValidator("param", GetUserByIdZodSchema), async (c) => {
 
   const response = responseFormater(
     "User fetched successfully",
-    userService.publicProps(user)
+    userService.publicProfile(user)
   );
 
   return c.json(response, OK);
@@ -66,7 +66,7 @@ app.patch(
     );
 
     const response = responseFormater("Password reset successfully", {
-      user: userService.publicProps(user),
+      user: userService.publicProfile(user),
     });
 
     return c.json(response, OK);
@@ -93,7 +93,7 @@ app.patch(
 
     const response = responseFormater(
       "User updated successfully",
-      userService.publicProps(user)
+      userService.publicProfile(user)
     );
     return c.json(response, OK);
   }
@@ -116,7 +116,7 @@ app.delete("/:id", zValidator("param", GetUserByIdZodSchema), async (c) => {
 
   const response = responseFormater(
     "Account deleted successfully",
-    userService.publicProps(user)
+    userService.publicProfile(user)
   );
 
   return c.json(response, OK);

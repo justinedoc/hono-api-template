@@ -1,7 +1,7 @@
 import { zValidator } from "@/lib/zod-validator-wrapper.js";
 import logger from "@/lib/logger.js";
 import { getRefreshCookie, setRefreshCookie } from "@/configs/cookie-config.js";
-import { CONFLICT, CREATED, FORBIDDEN, OK } from "stoker/http-status-codes";
+import { CONFLICT, FORBIDDEN, OK } from "stoker/http-status-codes";
 import { AuthError } from "@/errors/auth-error.js";
 import { adminProtected } from "@/middlewares/admin-protected.js";
 import {
@@ -60,7 +60,7 @@ app.post("/login", zValidator("json", UserLoginZodSchema), async (c) => {
   const response = responseFormater(
     "Login Successful",
     {
-      user: adminService.publicProps(updatedAdmin),
+      user: adminService.publicProfile(updatedAdmin),
     },
     { accessToken }
   );
@@ -115,7 +115,7 @@ app.post(
     const response = responseFormater(
       "Registeration successful",
       {
-        user: adminService.publicProps(updatedAdmin),
+        user: adminService.publicProfile(updatedAdmin),
       },
       metaData
     );
@@ -140,7 +140,7 @@ app.get("/:id", zValidator("param", GetAdminByIdZodSchema), async (c) => {
   );
 
   const response = responseFormater("Admin fetched successfully", {
-    user: adminService.publicProps(user),
+    user: adminService.publicProfile(user),
   });
 
   return c.json(response, OK);
@@ -161,7 +161,7 @@ app.patch(
     );
 
     const response = responseFormater("Password reset successfully", {
-      user: adminService.publicProps(user),
+      user: adminService.publicProfile(user),
     });
 
     return c.json(response, OK);
@@ -187,7 +187,7 @@ app.patch(
     wildCardDelCacheKey(ADMIN_CACHE_PREFIX);
 
     const response = responseFormater("Update Successful", {
-      user: adminService.publicProps(user),
+      user: adminService.publicProfile(user),
     });
 
     return c.json(response, OK);

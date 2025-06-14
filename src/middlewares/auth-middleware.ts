@@ -1,7 +1,7 @@
 import type { Context, Next } from "hono";
 import { verifyAccessToken } from "@/lib/token-utils.js";
 import logger from "@/lib/logger.js";
-import { JwtTokenExpired, JwtTokenInvalid } from "hono/utils/jwt/types";
+import { JwtTokenExpired } from "hono/utils/jwt/types";
 import { FORBIDDEN, UNAUTHORIZED } from "stoker/http-status-codes";
 import { type Roles } from "@/lib/role-utils.js";
 import { AuthError } from "@/errors/auth-error.js";
@@ -31,7 +31,7 @@ export async function authMiddleware(c: Context, next: Next) {
     logger.info("Access token verified successfully");
     await next();
   } catch (err) {
-    if (err instanceof JwtTokenExpired || err instanceof JwtTokenInvalid) {
+    if (err instanceof JwtTokenExpired) {
       logger.warn("Expired token detected");
       return c.json(
         {

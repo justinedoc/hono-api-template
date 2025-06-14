@@ -6,6 +6,7 @@ import { generateAuthTokens, verifyRefreshToken } from "@/lib/token-utils.js";
 import bcrypt from "bcryptjs";
 import type { Types } from "mongoose";
 import { BAD_REQUEST, NOT_FOUND } from "stoker/http-status-codes";
+import crypto from "crypto";
 
 export const excludePrivateFields =
   "-refreshToken -comparePassword -password -__v";
@@ -29,14 +30,9 @@ export class BaseUserService {
     return this.model.exists({ _id: id });
   }
 
-  publicProps(user: AllModels) {
-    return {
-      fullname: user.fullname,
-      email: user.email,
-      role: user.role,
-      username: user?.username,
-      profileImg: user.profileImg,
-    };
+  publicProfile(user: AllModels) {
+    const { _id, fullname, email, role, username, profileImg } = user;
+    return { id: _id, fullname, email, role, username, profileImg };
   }
 
   // user queries
@@ -66,6 +62,13 @@ export class BaseUserService {
     return bcrypt.hash(password, SALT_ROUNDS);
   }
 
+  get createPasswordResetToken() {
+    const resetToken = crypto.randomBytes(32).toString("hex");
+    const resetTokenExp = Date.now() + 10 * 60 * 1000;
+
+    return { resetToken, resetTokenExp };
+  }
+
   async canResetPassword(id: string, oldPassword: string) {
     const user = await this.model
       .findById(id)
@@ -92,7 +95,25 @@ export class BaseUserService {
     return user;
   }
 
-  async initForgotPassword() {}
+  async initForgotPassword(user: AllModels) {
+    const { resetToken, resetTokenExp } = this.createPasswordResetToken;
+    user.passwordResetToken = crypto
+      .createHash("sha256")
+      .update(resetToken)
+      .digest("hex");
+    user.passwordResetTokenExp = new Date(resetTokenExp);
+    await user.save({ validateBeforeSave: false });
+    return resetToken;
+  }
+
+  async resetPasswordByToken(user: AllModels, newPassword: string) {
+    user.password = await this.hashPassword(newPassword);
+    user.passwordResetToken = undefined;
+    user.passwordResetTokenExp = undefined;
+    user.refreshToken = [];
+    await user.save({ validateBeforeSave: false });
+    return this.publicProfile(user);
+  }
 
   // token actions
 

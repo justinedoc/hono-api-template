@@ -40,6 +40,8 @@ export function UsersZodSchemaFactory() {
     email: z.string().email("Invalid email"),
     refreshToken: z.array(z.string()).optional(),
     profileImg: z.string().optional(),
+    passwordResetToken: z.string().optional(),
+    passwordResetTokenExp: z.date().optional(),
     password: z
       .string()
       .min(8)
