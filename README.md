@@ -1,6 +1,5 @@
 # 🧱 Hono API Template
 
-[![CI](https://github.com/justinedoc/hono-api-template/actions/workflows/ci.yml/badge.svg)](https://github.com/justinedoc/hono-api-template/actions)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](./LICENSE)
 [![OpenAPI Docs](https://img.shields.io/badge/docs-Swagger_UI-85EA2D?logo=swagger&logoColor=white)](http://localhost:4000/docs)
 [![Postman](https://img.shields.io/badge/Postman-Collection-orange?logo=postman)](https://documenter.getpostman.com/view/38909501/2sB2x6nsKY)
@@ -67,9 +66,6 @@ npm run dev
 # 5. View API docs
 # Swagger UI: http://localhost:4000/docs
 ```
-````
-
----
 
 ## 🗂️ Project Structure
 
