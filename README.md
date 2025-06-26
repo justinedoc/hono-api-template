@@ -1,8 +1,3 @@
-Awesome — here's a **fully polished** and **feature-complete** `README.md` for your **Hono API Template**, including extras like badges, improved tone, and developer-centric finishing touches.
-
----
-
-````markdown
 # 🧱 Hono API Template
 
 [![CI](https://github.com/justinedoc/hono-api-template/actions/workflows/ci.yml/badge.svg)](https://github.com/justinedoc/hono-api-template/actions)
