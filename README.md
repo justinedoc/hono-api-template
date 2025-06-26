@@ -1,117 +1,202 @@
-# Hono API Template
+Awesome — here's a **fully polished** and **feature-complete** `README.md` for your **Hono API Template**, including extras like badges, improved tone, and developer-centric finishing touches.
 
-A **production-ready** Hono API boilerplate in TypeScript—designed to help you ship your API faster, with minimal setup and best-practice defaults.
+---
 
-This template comes fully loaded with:
+````markdown
+# 🧱 Hono API Template
 
-- **⚡️ Hono framework**  
-  Ultra-lightweight, high-performance routing & middleware built on the Web API standard.
+[![CI](https://github.com/justinedoc/hono-api-template/actions/workflows/ci.yml/badge.svg)](https://github.com/justinedoc/hono-api-template/actions)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](./LICENSE)
+[![OpenAPI Docs](https://img.shields.io/badge/docs-Swagger_UI-85EA2D?logo=swagger&logoColor=white)](http://localhost:4000/docs)
+[![Postman](https://img.shields.io/badge/Postman-Collection-orange?logo=postman)](https://documenter.getpostman.com/view/38909501/2sB2x6nsKY)
 
-- **TypeScript support**  
-  Strongly-typed request/response objects, compile-time safety, and autocomplete.
+A **production-ready**, scalable API starter powered by [Hono](https://hono.dev/) and **TypeScript**—built for developers who want speed **and** structure.
 
-- **OpenAPI (Swagger) docs**  
-  Auto-generated API spec—keep your docs in sync and ship a beautiful interactive API reference.
+Perfect for RESTful APIs, microservices, or server-side logic where performance and developer experience are both a priority.
 
-- **Postman collection**  
-  Ready-to-import Postman collection for easy endpoint testing and sharing:  
-  https://documenter.getpostman.com/view/38909501/2sB2x6nsKY
+---
 
-- **Validation & Error Handling**  
-  Built-in JSON schema (Zod) request validation, plus a unified error-handler middleware.
+## ⚙️ What’s Included
 
-- **Docker & Local Dev**  
-  One-click `docker-compose up` for local testing, plus `npm run dev` for hot-reload.
+This template ships with everything you need to build, test, and deploy confidently:
 
-- **Testing**  
-  Jest + SuperTest integration tests, with example coverage for all core routes.
+### Core
 
-- **Linting & Formatting**  
-  ESLint, Prettier, and Husky pre-commit hooks to enforce code quality.
+- **⚡️ Hono Framework**  
+  Fast, minimalist, Web Standards-based framework for handling routing and middleware.
 
-- **CI/CD**  
-  GitHub Actions workflows out-of-the-box for lint/test on every PR and automated Docker builds.
+- **📘 OpenAPI Support**  
+  Auto-generated Swagger UI docs powered by your schema definitions.
+
+- **🧪 Full Testing Suite**  
+  Jest + SuperTest integration tests with built-in examples.
+
+- **🛡 Zod Validation**  
+  Schema validation for requests and responses.
+
+- **🌍 TypeScript + tsconfig**  
+  Zero-guesswork DX with full type safety and helpful IDE hints.
+
+- **📦 Dockerized**  
+  One-command startup for local dev or containerized deployment.
+
+- **🧹 Pre-configured Linting**  
+  ESLint + Prettier + Husky = consistent code without the nagging.
+
+- **🔁 CI/CD with GitHub Actions**  
+  Auto-runs lint and tests on pull requests + production-ready Docker builds.
+
+- **📬 Postman Collection**  
+  Import and test API endpoints instantly.  
+  ➡️ [Open in Postman](https://documenter.getpostman.com/view/38909501/2sB2x6nsKY)
 
 ---
 
 ## 🚀 Quickstart
 
-# 1. Clone the template
-
+```bash
+# 1. Clone the repo
 git clone https://github.com/justinedoc/hono-api-template.git
 cd hono-api-template
 
 # 2. Install dependencies
-
 npm install
 
-# 3. Copy & configure your env
-
+# 3. Setup environment
 cp .env.example .env
+# ⤷ Then fill in your values (PORT, DATABASE_URL, JWT_SECRET, etc.)
 
-# └─ Update any vars (PORT, DATABASE_URL, JWT_SECRET, etc.)
-
-# 4. Start in development mode
-
+# 4. Start development server
 npm run dev
 
 # 5. View API docs
+# Swagger UI: http://localhost:4000/docs
+```
+````
 
-# • Local OpenAPI UI: http://localhost:4000/docs
-
-# • Postman: import the JSON from
-
-# https://documenter.getpostman.com/view/38909501/2sB2x6nsKY
+---
 
 ## 🗂️ Project Structure
 
+```
 .
-├── src
-│ ├── configs/ # Project configurations
-│ ├── constants/ # App constants
-│ ├── errors/ # Custom app errors
-│ ├── libs/ # Helpers (e.g. mailer, compound validators, e.t.c)
-│ ├── middleware/ # Error handler, auth, logging
-│ ├── middleware/ # Database models
-│ ├── routes/ # Hono route definitions
-│ ├── schemas/ # Zod request/response schemas
-│ ├── services/ # User sevices
-│ ├── types/ # App types
-│ ├── workers/ # Job workers
-│ ├── app.ts # Hono app & middleware setup
-│ └── index.ts # Server entrypoint
-├── tests/ # Jest + SuperTest integration tests
-├── .env.example
+├── src/
+│   ├── app.ts           # Hono instance and global middleware
+│   ├── index.ts         # App entry point
+│   ├── configs/         # App-level configurations
+│   ├── constants/       # App constants
+│   ├── errors/          # Custom error definitions
+│   ├── libs/            # Reusable helpers (e.g. mailers, validators)
+│   ├── middleware/      # Auth, logger, error handler
+│   ├── models/          # Database models (if using ORM/DB)
+│   ├── routes/          # Route definitions
+│   ├── schemas/         # Zod schemas (validation layer)
+│   ├── services/        # Business logic
+│   ├── types/           # Global TypeScript types
+│   └── workers/         # Background workers / jobs
+├── tests/               # Jest + SuperTest integration tests
+├── .env.example         # Environment variable example file
+├── Dockerfile
+├── docker-compose.yml
 ├── package.json
+└── README.md
+```
 
 ---
 
-## 📖 Documentation
+## 🧪 Testing
 
-- **OpenAPI UI**: `GET /docs` (Swagger UI)
-- **Postman Collection**:
-  Import directly from our published docs:
-  `https://documenter.getpostman.com/view/38909501/2sB2x6nsKY`
+```bash
+# Run all tests
+npm run test
 
----
+# Run with watch mode
+npm run test:watch
 
-## 🤝 Contributing
+# Run coverage
+npm run test:coverage
+```
 
-We welcome all contributions! Please:
-
-1. Fork this repository
-2. Create a feature branch (`git checkout -b feature/your-feature`)
-3. Commit your changes (`git commit -m 'feat: add your feature'`)
-4. Push to your branch (`git push origin feature/your-feature`)
-5. Open a Pull Request—our CI will run lint & tests automatically.
-
-See [CONTRIBUTING.md](./CONTRIBUTING.md) for more details.
+- Test files live under the `/tests` directory.
+- Uses **Jest** for test runner and **SuperTest** for HTTP assertions.
 
 ---
 
-## 📜 License
+## 📚 Documentation
 
-This project is **open source** under the [MIT License](./LICENSE).
-Feel free to use, modify, and distribute—happy coding!
+- **OpenAPI / Swagger UI**
+  Accessible at: `GET /docs` → [http://localhost:4000/docs](http://localhost:4000/docs)
+
+- **Postman Collection**
+  Import this URL into Postman:
+  [https://documenter.getpostman.com/view/38909501/2sB2x6nsKY](https://documenter.getpostman.com/view/38909501/2sB2x6nsKY)
 
 ---
+
+## 🧩 Tech Stack
+
+| Layer          | Tool/Lib                 |
+| -------------- | ------------------------ |
+| Routing        | [Hono](https://hono.dev) |
+| Language       | TypeScript               |
+| Validation     | [Zod](https://zod.dev)   |
+| Testing        | Jest + SuperTest         |
+| Docs           | OpenAPI / Swagger        |
+| Dev Experience | ESLint, Prettier, Husky  |
+| Deployment     | Docker, GitHub Actions   |
+
+---
+
+## 🧑‍💻 Contributing
+
+Found a bug? Got an idea? Want to add a feature? Awesome!
+
+### Here's how to contribute:
+
+```bash
+# 1. Fork the repo
+
+# 2. Create a new branch
+git checkout -b feature/your-feature-name
+
+# 3. Make your changes
+
+# 4. Commit and push
+git commit -m "feat: added awesome feature"
+git push origin feature/your-feature-name
+
+# 5. Open a Pull Request 🎉
+```
+
+All PRs are checked with lint and test pipelines automatically.
+
+See [CONTRIBUTING.md](./CONTRIBUTING.md) for more info.
+
+---
+
+## 🛠 Future Plans
+
+- [ ] Prisma integration example
+- [ ] Redis + Job queues
+- [ ] Role-based Auth scaffold
+- [ ] Rate-limiting middleware
+- [ ] Vite-based Playground UI
+
+---
+
+## 📄 License
+
+This project is open source under the [MIT License](./LICENSE).
+Use it freely. Modify it. Build something great.
+
+---
+
+## 🌐 About the Author
+
+Built and maintained by [**@justinedoc**](https://github.com/justinedoc)
+I love clean code, fast APIs, and developer-first DX.
+Feel free to star 🌟 the repo and reach out if you're using it in your project!
+
+---
+
+Made with ❤️ + ☕ + `pnpm install`
