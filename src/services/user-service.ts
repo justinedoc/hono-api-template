@@ -1,7 +1,7 @@
-import type { IUserLean } from "@/types/user-type.js";
-import { BaseUserService } from "@/services/base-user-service.js";
 import type { Roles } from "@/lib/role-utils.js";
 import { BaseUserCrud } from "@/services/base-crud-service.js";
+import { BaseUserService } from "@/services/base-user-service.js";
+import type { IUserLean } from "@/types/user-type.js";
 
 type IncomingUser = Omit<
   IUserLean,

@@ -38,6 +38,7 @@ export const onError: ErrorHandler = (err, c) => {
       {
         success: false,
         message: err.message,
+        code: err?.code,
         stack: ENV.ENV !== "production" && err.stack,
       },
       err.status

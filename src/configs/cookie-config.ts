@@ -1,7 +1,10 @@
 import { ENV } from "@/configs/env-config.js";
-import { COOKIE_MAX_AGE } from "@/constants/auth-constants.js";
 import type { Context } from "hono";
 import { deleteCookie, getSignedCookie, setSignedCookie } from "hono/cookie";
+
+const REFRESH_COOKIE_MAX_AGE = 7 * 24 * 60 * 60;
+
+const ACCESS_COOKIE_MAX_AGE = 15 * 60;
 
 const cookieOptions = {
   httpOnly: true,
@@ -11,16 +14,44 @@ const cookieOptions = {
 } as const;
 
 export async function setRefreshCookie(c: Context, refreshToken: string) {
-  return setSignedCookie(c, "session", refreshToken, ENV.COOKIE_SECRET, {
-    maxAge: COOKIE_MAX_AGE,
+  return setSignedCookie(c, "refresh_token", refreshToken, ENV.REFRESH_COOKIE_SECRET, {
+    maxAge: REFRESH_COOKIE_MAX_AGE,
     ...cookieOptions,
   });
 }
 
+export async function setAccessCookie(c: Context, refreshToken: string) {
+  return setSignedCookie(c, "access_token", refreshToken, ENV.ACCESS_COOKIE_SECRET, {
+    maxAge: ACCESS_COOKIE_MAX_AGE,
+    ...cookieOptions,
+  });
+}
+
+export async function setAuthCookies(
+  c: Context,
+  { refreshToken, accessToken }: { refreshToken: string; accessToken: string }
+) {
+  await setAccessCookie(c, accessToken);
+  await setRefreshCookie(c, refreshToken);
+}
+
 export function deleteRefreshCookie(c: Context) {
-  deleteCookie(c, "session");
+  deleteCookie(c, "refresh_token");
+}
+
+export function deleteAccessCookie(c: Context) {
+  deleteCookie(c, "access_token");
+}
+
+export function deleteAuthCookies(c: Context) {
+  deleteAccessCookie(c);
+  deleteRefreshCookie(c);
 }
 
 export async function getRefreshCookie(c: Context) {
-  return getSignedCookie(c, ENV.COOKIE_SECRET, "session");
+  return getSignedCookie(c, ENV.REFRESH_COOKIE_SECRET, "refresh_token");
+}
+
+export async function getAccessCookie(c: Context) {
+  return getSignedCookie(c, ENV.ACCESS_COOKIE_SECRET, "access_token");
 }

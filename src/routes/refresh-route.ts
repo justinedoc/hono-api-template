@@ -1,23 +1,27 @@
-import { getRefreshCookie, setRefreshCookie } from "@/configs/cookie-config.js";
-import type { AppBindings } from "@/types/hono-types.js";
+import { getRefreshCookie, setAuthCookies } from "@/configs/cookie-config.js";
 import { AuthError } from "@/errors/auth-error.js";
+import { getServiceFromCookie } from "@/lib/get-service.js";
+import type { AppBindings } from "@/types/hono-types.js";
 import { Hono } from "hono";
 import { OK } from "stoker/http-status-codes";
-import { getServiceFromCookie } from "@/lib/get-service.js";
 
 const app = new Hono<AppBindings>().basePath("/refresh");
 
-app.get("/", async (c) => {
-  const cookie = await getRefreshCookie(c);
+app.post("/", async (c) => {
+  const refreshCookie = await getRefreshCookie(c);
 
-  if (!cookie) throw new AuthError("No token provided");
+  if (!refreshCookie) {
+    throw new AuthError("Session expired, please login again");
+  }
 
-  const { service } = getServiceFromCookie(cookie);
+  const { service } = getServiceFromCookie(refreshCookie);
 
-  const { accessToken, refreshToken } = await service.refreshAuth(cookie);
-  await setRefreshCookie(c, refreshToken);
+  const { accessToken, refreshToken } =
+    await service.refreshAuth(refreshCookie);
 
-  return c.json({ success: true, data: { accessToken } }, OK);
+  await setAuthCookies(c, { accessToken, refreshToken });
+
+  return c.json({ success: true }, OK);
 });
 
 export default app;

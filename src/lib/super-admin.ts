@@ -1,4 +1,5 @@
 import { ENV } from "@/configs/env-config.js";
+import { RolePermissions } from "@/lib/permissions.js";
 import adminService from "@/services/admin-services.js";
 
 /* eslint-disable no-console */
@@ -22,6 +23,7 @@ export async function createSuperAdmin() {
     const superadmin = await adminService.create({
       ...adminData,
       password: hashedPassword,
+      permissions: RolePermissions.superadmin,
     });
 
     console.log("Admin created successfully: \n");

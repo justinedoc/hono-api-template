@@ -1,7 +1,4 @@
-import { Schema } from "mongoose";
-import z from "zod";
-import { isValidObjectId } from "mongoose";
-import type { IUserDoc } from "@/types/user-type.js";
+import { RolePermissions } from "@/lib/permissions.js";
 import {
   GetByIdZodSchemaFactory,
   LoginZodSchemaFactory,
@@ -9,6 +6,9 @@ import {
   UpdateUserDataZodSchemaFactory,
   UsersZodSchemaFactory,
 } from "@/schemas/schema-factory.js";
+import type { IUserDoc } from "@/types/user-type.js";
+import { isValidObjectId, Schema } from "mongoose";
+import z from "zod";
 
 // User login schema
 export const UserLoginZodSchema = LoginZodSchemaFactory();
@@ -37,6 +37,10 @@ export const UserPasswordUpdateZodSchema = PasswordUpdateZodSchemaFactory();
 export const UserSchema = new Schema<IUserDoc>(
   {
     role: { type: String, required: true, enum: ["USER"], default: "USER" },
+    permissions: {
+      type: [String],
+      default: RolePermissions.user,
+    },
     fullname: { type: String, required: true },
     username: String,
     email: { type: String, required: true, unique: true },

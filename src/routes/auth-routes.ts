@@ -1,19 +1,19 @@
-import { Hono } from "hono";
 import { zValidator } from "@/lib/zod-validator-wrapper.js";
+import { Hono } from "hono";
 import { CONFLICT, CREATED, OK } from "stoker/http-status-codes";
 
-import userService from "@/services/user-service.js";
-import logger from "@/lib/logger.js";
 import {
-  deleteRefreshCookie,
+  deleteAuthCookies,
   getRefreshCookie,
-  setRefreshCookie,
+  setAuthCookies,
 } from "@/configs/cookie-config.js";
-import { UserLoginZodSchema, UserZodSchema } from "@/schemas/user-schema.js";
 import { AuthError } from "@/errors/auth-error.js";
-import mailScheduler from "@/services/mail-producer.js";
 import { getServiceFromCookie } from "@/lib/get-service.js";
+import logger from "@/lib/logger.js";
 import { responseFormater } from "@/lib/response-fmt.js";
+import { UserLoginZodSchema, UserZodSchema } from "@/schemas/user-schema.js";
+import mailScheduler from "@/services/mail-producer.js";
+import userService from "@/services/user-service.js";
 
 const app = new Hono().basePath("/auth");
 
@@ -35,9 +35,7 @@ app.post(
       password: hashedPassword,
     });
 
-    const { accessToken, refreshToken } = await userService.getAuthTokens(
-      user._id
-    );
+    const { accessToken, refreshToken } = await userService.getAuthTokens(user);
 
     const updatedUser = await userService.updateRefreshToken(
       user._id,
@@ -46,7 +44,7 @@ app.post(
 
     if (!updatedUser) throw new AuthError("Failed to update refresh token");
 
-    await setRefreshCookie(c, refreshToken);
+    await setAuthCookies(c, { refreshToken, accessToken });
 
     logger.info(`User ${user.fullname} has been registered`);
 
@@ -58,8 +56,7 @@ app.post(
 
     const response = responseFormater(
       "Signup successful",
-      userService.publicProfile(updatedUser),
-      { accessToken }
+      userService.publicProfile(updatedUser)
     );
 
     return c.json(response, CREATED);
@@ -70,19 +67,15 @@ app.post(
 app.post("/login", zValidator("json", UserLoginZodSchema), async (c) => {
   const { email, password } = c.req.valid("json");
 
-  const refCookie = await getRefreshCookie(c);
-
-  if (refCookie) throw new AuthError("Already logged in", CONFLICT);
-
   const user = await userService.findByEmail(email);
+
+  if (!user) throw new AuthError("Invalid credentials");
 
   const isPasswordMatch = await user.comparePassword(password);
 
-  if (!isPasswordMatch) throw new AuthError("Incorrect credentials");
+  if (!isPasswordMatch) throw new AuthError("Invalid credentials");
 
-  const { accessToken, refreshToken } = await userService.getAuthTokens(
-    user._id
-  );
+  const { accessToken, refreshToken } = await userService.getAuthTokens(user);
 
   const updatedUser = await userService.updateRefreshToken(
     user._id,
@@ -91,14 +84,13 @@ app.post("/login", zValidator("json", UserLoginZodSchema), async (c) => {
 
   if (!updatedUser) throw new AuthError("Failed to update refresh token");
 
-  await setRefreshCookie(c, refreshToken);
+  await setAuthCookies(c, { refreshToken, accessToken });
 
   logger.info(`${user.fullname} logged in`);
 
   const response = responseFormater(
     "Login successful",
-    userService.publicProfile(updatedUser),
-    { accessToken }
+    userService.publicProfile(updatedUser)
   );
 
   return c.json(response, OK);
@@ -112,11 +104,12 @@ app.post("/logout", async (c) => {
     const { service } = getServiceFromCookie(refreshToken);
     const user = await service.getByRefreshToken(refreshToken);
 
-    if (user)
+    if (user) {
       await service.clearRefreshToken(user._id.toString(), refreshToken);
+    }
   }
 
-  deleteRefreshCookie(c);
+  deleteAuthCookies(c);
   logger.info(`A user logged out`);
   return c.json({ success: true, message: "Logout successful" }, OK);
 });

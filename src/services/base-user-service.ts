@@ -4,9 +4,9 @@ import type { AllModels, Roles } from "@/lib/role-utils.js";
 import { selectModel } from "@/lib/role-utils.js";
 import { generateAuthTokens, verifyRefreshToken } from "@/lib/token-utils.js";
 import bcrypt from "bcryptjs";
+import crypto from "crypto";
 import type { Types } from "mongoose";
 import { BAD_REQUEST, NOT_FOUND } from "stoker/http-status-codes";
-import crypto from "crypto";
 
 export const excludePrivateFields =
   "-refreshToken -comparePassword -password -__v";
@@ -42,18 +42,11 @@ export class BaseUserService {
   }
 
   async findByEmail(email: string) {
-    const user = await this.model
-      .findOne({ email })
-      .select("-refreshToken -__v");
-    if (!user) throw new AuthError("Incorrect credentials");
-    return user;
+    return this.model.findOne({ email }).select("-refreshToken -__v");
   }
 
   async findById(id: string) {
-    const user = await this.model.findById(id).select(excludePrivateFields);
-
-    if (!user) throw new AuthError("User not found", NOT_FOUND);
-    return user;
+    return this.model.findById(id).select(excludePrivateFields);
   }
 
   // Password actions
@@ -117,8 +110,8 @@ export class BaseUserService {
 
   // token actions
 
-  async getAuthTokens(id: Types.ObjectId) {
-    return generateAuthTokens(id, this.role);
+  async getAuthTokens(user: AllModels) {
+    return generateAuthTokens(user._id, user.role, user.permissions);
   }
 
   async getByIdAndRefreshToken(id: string, token: string) {
@@ -147,25 +140,28 @@ export class BaseUserService {
 
   // refresh token func
 
-  async refreshAuth(oldToken: string) {
-    const decoded = await verifyRefreshToken(oldToken);
+  async refreshAuth(refreshToken: string) {
+    const decoded = await verifyRefreshToken(refreshToken);
+
     if (!decoded) {
       throw new AuthError("Invalid refresh token, please login again");
     }
 
-    const user = await this.getByIdAndRefreshToken(decoded.id, oldToken);
+    const user = await this.getByIdAndRefreshToken(decoded.id, refreshToken);
 
     if (!user) {
-      this.clearRefreshToken(decoded.id, oldToken);
-      throw new AuthError("Invalid refresh token");
+      await this.clearRefreshToken(decoded.id, refreshToken);
+      throw new AuthError("Invalid refresh token, please login again");
     }
 
-    const { accessToken, refreshToken } = await this.getAuthTokens(user._id);
+    const { accessToken, refreshToken: newRefreshToken } =
+      await this.getAuthTokens(user);
 
-    await this.clearRefreshToken(user._id.toString(), oldToken);
+    await Promise.all([
+      this.clearRefreshToken(user._id.toString(), refreshToken),
+      this.updateRefreshToken(user._id, newRefreshToken),
+    ]);
 
-    await this.updateRefreshToken(user._id, refreshToken);
-
-    return { accessToken, refreshToken };
+    return { accessToken, refreshToken: newRefreshToken };
   }
 }

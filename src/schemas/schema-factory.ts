@@ -1,7 +1,7 @@
-import z from "zod";
-import { isValidObjectId } from "mongoose";
 import type { Roles } from "@/lib/role-utils.js";
 import { toPascalCase } from "@/lib/to-pascal-case.js";
+import { isValidObjectId } from "mongoose";
+import z from "zod";
 
 // login schema
 export function LoginZodSchemaFactory() {
@@ -38,6 +38,7 @@ export function UsersZodSchemaFactory() {
     fullname: z.string().min(1).max(50),
     username: z.string().max(50).optional(),
     email: z.string().email("Invalid email"),
+    permissions: z.array(z.string()).optional(),
     refreshToken: z.array(z.string()).optional(),
     profileImg: z.string().optional(),
     passwordResetToken: z.string().optional(),

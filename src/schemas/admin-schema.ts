@@ -1,3 +1,4 @@
+import { RolePermissions } from "@/lib/permissions.js";
 import {
   GetByIdZodSchemaFactory,
   UpdateUserDataZodSchemaFactory,
@@ -25,6 +26,10 @@ export const AdminZodSchema = UsersZodSchemaFactory().extend({
 export const AdminSchema = new Schema<IAdminDoc>(
   {
     role: { type: String, required: true, enum: ["ADMIN"], default: "ADMIN" },
+    permissions: {
+      type: [String],
+      default: RolePermissions.admin,
+    },
     fullname: { type: String, required: true },
     username: String,
     email: { type: String, required: true, unique: true },

@@ -1,12 +1,13 @@
-import type { Roles } from "@/lib/role-utils.js";
-import type { Types } from "mongoose";
-import { sign, verify } from "hono/jwt";
 import { ENV } from "@/configs/env-config.js";
 import {
   ACCESS_TOKEN_EXP,
   REFRESH_TOKEN_EXP,
 } from "@/constants/auth-constants.js";
+import type { Permission } from "@/lib/permissions.js";
+import type { Roles } from "@/lib/role-utils.js";
+import { sign, verify } from "hono/jwt";
 import type { JWTPayload } from "hono/utils/jwt/types";
+import type { Types } from "mongoose";
 
 interface AuthTokens {
   accessToken: string;
@@ -16,6 +17,7 @@ interface AuthTokens {
 export interface AuthPayload extends JWTPayload {
   id: string;
   role: Roles;
+  permissions: string[] | Permission[]
 }
 
 async function verifyToken(
@@ -27,9 +29,15 @@ async function verifyToken(
 
 export async function generateAuthTokens(
   id: Types.ObjectId,
-  role: Roles
+  role: Roles,
+  permissions: string[] | undefined
 ): Promise<AuthTokens> {
-  const accessPayload = { id: id.toString(), role, exp: ACCESS_TOKEN_EXP };
+  const accessPayload = {
+    id: id.toString(),
+    role,
+    exp: ACCESS_TOKEN_EXP,
+    ...(permissions && { permissions }),
+  };
   const refreshPayload = { ...accessPayload, exp: REFRESH_TOKEN_EXP };
 
   return {

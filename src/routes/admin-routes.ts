@@ -1,16 +1,15 @@
-import { zValidator } from "@/lib/zod-validator-wrapper.js";
-import logger from "@/lib/logger.js";
-import { getRefreshCookie, setRefreshCookie } from "@/configs/cookie-config.js";
-import { CONFLICT, FORBIDDEN, OK } from "stoker/http-status-codes";
+import { setAuthCookies } from "@/configs/cookie-config.js";
+import { ADMIN_CACHE_PREFIX } from "@/constants/cache-constants.js";
 import { AuthError } from "@/errors/auth-error.js";
+import { getCacheKey, getCacheOrFetch } from "@/lib/get-cache.js";
+import logger from "@/lib/logger.js";
+import { wildCardDelCacheKey } from "@/lib/node-cache.js";
+import { Permission } from "@/lib/permissions.js";
+import { responseFormater } from "@/lib/response-fmt.js";
+import { zValidator } from "@/lib/zod-validator-wrapper.js";
 import { adminProtected } from "@/middlewares/admin-protected.js";
-import {
-  authMiddleware,
-  isSelfOrAdmin,
-} from "@/middlewares/auth-middleware.js";
-import adminService from "@/services/admin-services.js";
-import type { AppBindings } from "@/types/hono-types.js";
-import { Hono } from "hono";
+import { authMiddleware } from "@/middlewares/auth-middleware.js";
+import { requirePermission } from "@/middlewares/require-permission.js";
 import {
   AdminZodSchema,
   GetAdminByIdZodSchema,
@@ -20,11 +19,10 @@ import {
   UserLoginZodSchema,
   UserPasswordUpdateZodSchema,
 } from "@/schemas/user-schema.js";
-import { getCacheKey, getCacheOrFetch } from "@/lib/get-cache.js";
-import { unauthorizedRes } from "@/routes/user-routes.js";
-import { wildCardDelCacheKey } from "@/lib/node-cache.js";
-import { ADMIN_CACHE_PREFIX } from "@/constants/cache-constants.js";
-import { responseFormater } from "@/lib/response-fmt.js";
+import adminService from "@/services/admin-services.js";
+import type { AppBindings } from "@/types/hono-types.js";
+import { Hono } from "hono";
+import { CONFLICT, NOT_FOUND, OK } from "stoker/http-status-codes";
 
 const app = new Hono<AppBindings>().basePath("/admin");
 
@@ -32,19 +30,15 @@ const app = new Hono<AppBindings>().basePath("/admin");
 app.post("/login", zValidator("json", UserLoginZodSchema), async (c) => {
   const { email, password } = c.req.valid("json");
 
-  const refCookie = await getRefreshCookie(c);
-
-  if (refCookie) throw new AuthError("Already logged in", CONFLICT);
-
   const admin = await adminService.findByEmail(email);
+
+  if (!admin) throw new AuthError("Invalid credentials");
 
   const isPasswordMatch = await admin.comparePassword(password);
 
-  if (!isPasswordMatch) throw new AuthError("Incorrect credentials");
+  if (!isPasswordMatch) throw new AuthError("Invalid credentials");
 
-  const { accessToken, refreshToken } = await adminService.getAuthTokens(
-    admin._id
-  );
+  const { accessToken, refreshToken } = await adminService.getAuthTokens(admin);
 
   const updatedAdmin = await adminService.updateRefreshToken(
     admin._id,
@@ -53,17 +47,13 @@ app.post("/login", zValidator("json", UserLoginZodSchema), async (c) => {
 
   if (!updatedAdmin) throw new AuthError("Failed to update refresh token");
 
-  await setRefreshCookie(c, refreshToken);
+  await setAuthCookies(c, { refreshToken, accessToken });
 
   logger.info(`Admin ${admin.fullname} logged in`);
 
-  const response = responseFormater(
-    "Login Successful",
-    {
-      user: adminService.publicProfile(updatedAdmin),
-    },
-    { accessToken }
-  );
+  const response = responseFormater("Login Successful", {
+    user: adminService.publicProfile(updatedAdmin),
+  });
 
   return c.json(response, OK);
 });
@@ -97,9 +87,7 @@ app.post(
       password: hashedPassword,
     });
 
-    const { accessToken, refreshToken } = await adminService.getAuthTokens(
-      admin._id
-    );
+    const { refreshToken } = await adminService.getAuthTokens(admin);
 
     const updatedAdmin = await adminService.updateRefreshToken(
       admin._id,
@@ -110,46 +98,43 @@ app.post(
 
     logger.info(`Admin ${admin.fullname} has been registered`);
 
-    const metaData = { accessToken };
-
-    const response = responseFormater(
-      "Registeration successful",
-      {
-        user: adminService.publicProfile(updatedAdmin),
-      },
-      metaData
-    );
+    const response = responseFormater("Registeration successful", {
+      user: adminService.publicProfile(updatedAdmin),
+    });
 
     return c.json(response, OK);
   }
 );
 
 // get admin by ID
-app.get("/:id", zValidator("param", GetAdminByIdZodSchema), async (c) => {
-  const { id } = c.req.valid("param");
-  const { id: userId, role } = c.get("user");
-  const cacheKey = getCacheKey("admin", { userId });
+app.get(
+  "/:id",
+  zValidator("param", GetAdminByIdZodSchema),
+  requirePermission(Permission.ADMIN_READ),
+  async (c) => {
+    const { id: userId } = c.req.valid("param");
+    const cacheKey = getCacheKey("admin", { userId });
 
-  if (!isSelfOrAdmin({ userId, id, role })) {
-    throw new AuthError(unauthorizedRes.message, FORBIDDEN);
+    const user = await getCacheOrFetch(
+      cacheKey,
+      async () => await adminService.findById(userId)
+    );
+
+    if (!user) throw new AuthError("Admin not found", NOT_FOUND);
+
+    const response = responseFormater("Admin info retrieved successfully", {
+      user: adminService.publicProfile(user),
+    });
+
+    return c.json(response, OK);
   }
-
-  const user = await getCacheOrFetch(
-    cacheKey,
-    async () => await adminService.findById(userId)
-  );
-
-  const response = responseFormater("Admin fetched successfully", {
-    user: adminService.publicProfile(user),
-  });
-
-  return c.json(response, OK);
-});
+);
 
 // update admin password
 app.patch(
   "/reset-password",
   zValidator("json", UserPasswordUpdateZodSchema),
+  requirePermission(Permission.ADMIN_MANAGE),
   async (c) => {
     const { id: userId } = c.get("user");
     const { newPassword, oldPassword } = c.req.valid("json");
@@ -173,14 +158,10 @@ app.patch(
   "/:id",
   zValidator("param", GetAdminByIdZodSchema),
   zValidator("json", UpdateAdminZodSchema.shape.data),
+  requirePermission(Permission.ADMIN_MANAGE),
   async (c) => {
-    const { id: userId, role } = c.get("user");
     const { id } = c.req.valid("param");
     const data = c.req.valid("json");
-
-    if (!isSelfOrAdmin({ userId, id, role })) {
-      throw new AuthError(unauthorizedRes.message, FORBIDDEN);
-    }
 
     const user = await adminService.update(id, data);
 
