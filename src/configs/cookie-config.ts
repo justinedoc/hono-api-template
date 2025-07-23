@@ -13,18 +13,30 @@ const cookieOptions = {
   partitioned: ENV.ENV === "production",
 } as const;
 
-export async function setRefreshCookie(c: Context, refreshToken: string) {
-  return setSignedCookie(c, "refresh_token", refreshToken, ENV.REFRESH_COOKIE_SECRET, {
-    maxAge: REFRESH_COOKIE_MAX_AGE,
-    ...cookieOptions,
-  });
+export async function setAccessCookie(c: Context, accessToken: string) {
+  return setSignedCookie(
+    c,
+    "access_token",
+    accessToken,
+    ENV.ACCESS_COOKIE_SECRET,
+    {
+      ...cookieOptions,
+      maxAge: ACCESS_COOKIE_MAX_AGE,
+    }
+  );
 }
 
-export async function setAccessCookie(c: Context, refreshToken: string) {
-  return setSignedCookie(c, "access_token", refreshToken, ENV.ACCESS_COOKIE_SECRET, {
-    maxAge: ACCESS_COOKIE_MAX_AGE,
-    ...cookieOptions,
-  });
+export async function setRefreshCookie(c: Context, refreshToken: string) {
+  return setSignedCookie(
+    c,
+    "refresh_token",
+    refreshToken,
+    ENV.REFRESH_COOKIE_SECRET,
+    {
+      ...cookieOptions,
+      maxAge: REFRESH_COOKIE_MAX_AGE,
+    }
+  );
 }
 
 export async function setAuthCookies(

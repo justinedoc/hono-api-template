@@ -27,6 +27,7 @@ export async function authMiddleware(c: Context, next: Next) {
 
     const service = selectService(decoded.role);
     const exists = await service.existsById(decoded.id);
+
     if (!exists) {
       throw new AuthError(
         "Access denied: user not found",

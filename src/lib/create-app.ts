@@ -1,16 +1,16 @@
 import { OpenAPIHono } from "@hono/zod-openapi";
-import { logger } from "hono/logger";
-import { cors } from "hono/cors";
-import { compress } from "hono/compress";
-import { secureHeaders } from "hono/secure-headers";
-import { prettyJSON as pretty } from "hono/pretty-json";
 import { rateLimiter } from "hono-rate-limiter";
+import { compress } from "hono/compress";
+import { cors } from "hono/cors";
+import { logger } from "hono/logger";
+import { prettyJSON as pretty } from "hono/pretty-json";
+import { secureHeaders } from "hono/secure-headers";
 import serveEmojiFavicon from "stoker/middlewares/serve-emoji-favicon";
 
-import { onError } from "@/middlewares/on-error.js";
-import { defaultHook } from "stoker/openapi";
 import { connectToDb } from "@/configs/mongodb.js";
 import { createSuperAdmin } from "@/lib/super-admin.js";
+import { onError } from "@/middlewares/on-error.js";
+import { defaultHook } from "stoker/openapi";
 
 import "@/workers/mail-workers.js";
 
@@ -48,7 +48,7 @@ export default async function createApp() {
     })
   );
 
-  app.use(cors({ origin: "*", credentials: true }));
+  app.use(cors({ origin: ["http://localhost:3000"], credentials: true }));
   app.use(compress());
   app.use(secureHeaders());
   app.use(pretty());

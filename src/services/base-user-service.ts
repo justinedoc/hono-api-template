@@ -126,15 +126,21 @@ export class BaseUserService {
     });
   }
 
-  async updateRefreshToken(userId: Types.ObjectId, refreshToken: string) {
+  async updateRefreshToken(
+    userId: string | Types.ObjectId,
+    refreshToken: string
+  ) {
     return this.model.findByIdAndUpdate(
       userId,
       { $addToSet: { refreshToken } },
-      { runValidators: true, new: true }
+      { new: true, upsert: true }
     );
   }
 
-  async clearRefreshToken(userId: string, refreshToken: string) {
+  async clearRefreshToken(
+    userId: string | Types.ObjectId,
+    refreshToken: string
+  ) {
     return this.model.findByIdAndUpdate(userId, { $pull: { refreshToken } });
   }
 
@@ -151,14 +157,16 @@ export class BaseUserService {
 
     if (!user) {
       await this.clearRefreshToken(decoded.id, refreshToken);
-      throw new AuthError("Invalid refresh token, please login again");
+      throw new AuthError(
+        "Invalid refresh token, please login again. user not found"
+      );
     }
 
     const { accessToken, refreshToken: newRefreshToken } =
       await this.getAuthTokens(user);
 
     await Promise.all([
-      this.clearRefreshToken(user._id.toString(), refreshToken),
+      this.clearRefreshToken(user._id, refreshToken),
       this.updateRefreshToken(user._id, newRefreshToken),
     ]);
 

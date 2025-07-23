@@ -21,6 +21,28 @@ const app = new Hono<AppBindings>().basePath("/user");
 
 app.use(authMiddleware);
 
+app.get("/current", requirePermission(Permission.SELF_READ), async (c) => {
+  const currentUser = c.get("user");
+  const cacheKey = getCacheKey("user", { userId: currentUser.id });
+
+  const user = await getCacheOrFetch(
+    cacheKey,
+    async () => await userService.findById(currentUser.id)
+  );
+
+  if (!user) {
+    c.status(404);
+    throw new Error("User not found");
+  }
+
+  const response = responseFormater(
+    "User information retrieved successfully",
+    userService.publicProfile(user)
+  );
+
+  return c.json(response, OK);
+});
+
 // get user by id
 app.get(
   "/:id",
@@ -84,11 +106,11 @@ app.patch(
 // update user
 app.patch(
   "/:id",
-  zValidator("param", UpdateUserZodSchema.pick({ id: true })),
+  zValidator("param", UpdateUserZodSchema.shape.id),
   zValidator("json", UpdateUserZodSchema.shape.data),
   requirePermission(Permission.SELF_UPDATE, Permission.USER_UPDATE),
   async (c) => {
-    const { id: targetUserId } = c.req.valid("param");
+    const targetUserId = c.req.valid("param");
     const data = c.req.valid("json");
     const currentUser = c.get("user");
 

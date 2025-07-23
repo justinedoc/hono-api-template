@@ -10,6 +10,8 @@ const app = new Hono<AppBindings>().basePath("/refresh");
 app.post("/", async (c) => {
   const refreshCookie = await getRefreshCookie(c);
 
+  console.log("**** Recieved refresh request **** :", refreshCookie);
+
   if (!refreshCookie) {
     throw new AuthError("Session expired, please login again");
   }
