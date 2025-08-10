@@ -1,4 +1,4 @@
-import { handle } from "hono/vercel";
+import { handle } from "@hono/node-server/vercel";
 
 // @ts-expect-error: Importing app from a compiled JavaScript file
 
