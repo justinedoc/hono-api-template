@@ -1,8 +1,7 @@
-import app from "../src/app.js";
 import { handle } from "hono/vercel";
 
-export const config = {
-  runtime: "edge",
-};
+// @ts-expect-error: Importing app from a compiled JavaScript file
+
+import app from "../dist/src/app.js";
 
 export default handle(app);
