@@ -8,6 +8,7 @@ const ACCESS_COOKIE_MAX_AGE = 15 * 60;
 
 const cookieOptions = {
   httpOnly: true,
+  partitioned: true,
   secure: ENV.ENV === "production",
   sameSite: ENV.ENV === "production" ? "none" : "lax",
 } as const;
