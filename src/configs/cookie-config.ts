@@ -10,11 +10,10 @@ const cookieOptions = {
   httpOnly: true,
   secure: ENV.ENV === "production",
   sameSite: ENV.ENV === "production" ? "none" : "lax",
-  partitioned: ENV.ENV === "production",
 } as const;
 
 export async function setAccessCookie(c: Context, accessToken: string) {
-  return setSignedCookie(
+  return await setSignedCookie(
     c,
     "access_token",
     accessToken,
@@ -27,7 +26,7 @@ export async function setAccessCookie(c: Context, accessToken: string) {
 }
 
 export async function setRefreshCookie(c: Context, refreshToken: string) {
-  return setSignedCookie(
+  return await setSignedCookie(
     c,
     "refresh_token",
     refreshToken,
@@ -43,8 +42,10 @@ export async function setAuthCookies(
   c: Context,
   { refreshToken, accessToken }: { refreshToken: string; accessToken: string }
 ) {
-  await setAccessCookie(c, accessToken);
-  await setRefreshCookie(c, refreshToken);
+  await Promise.all([
+    setAccessCookie(c, accessToken),
+    setRefreshCookie(c, refreshToken),
+  ]);
 }
 
 export function deleteRefreshCookie(c: Context) {

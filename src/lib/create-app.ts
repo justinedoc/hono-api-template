@@ -31,7 +31,7 @@ export default async function createApp() {
   app.use(
     rateLimiter({
       windowMs: 15 * 60 * 1000,
-      limit: 100,
+      limit: 600,
       standardHeaders: "draft-7",
       keyGenerator: (c) =>
         c.req.header("CF-Connecting-IP") ||
@@ -48,7 +48,7 @@ export default async function createApp() {
     })
   );
 
-  app.use(cors({ origin: ["http://localhost:3000"], credentials: true }));
+  app.use(cors({ origin: ["http://localhost:3000", "https://cellar-phi.vercel.app"], credentials: true }));
   app.use(compress());
   app.use(secureHeaders());
   app.use(pretty());
