@@ -6,7 +6,7 @@ import z from "zod";
 // login schema
 export function LoginZodSchemaFactory() {
   return z.object({
-    email: z.string().email(),
+    email: z.string().trim().email(),
     password: z.string(),
   });
 }
